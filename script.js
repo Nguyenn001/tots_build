@@ -9,7 +9,7 @@ document.getElementById('btnReset').addEventListener('click', () => {
 
 // Chức năng nút Lấy thông tin (Sử dụng iframe ẩn để né lỗi CORS)
 document.getElementById('btnFetch').addEventListener('click', () => {
-    statusEl.textContent = 'Trạng thái: Đang tải dữ liệu từ bảng vinh danh...';
+    statusEl.textContent = 'Trạng thái: Đang tải dữ liệu cầu thủ từ bảng vinh danh...';
     container.innerHTML = '';
 
     const targetUrl = 'https://nguyenn001.github.io/my-nguyennnnm0/';
@@ -20,24 +20,35 @@ document.getElementById('btnFetch').addEventListener('click', () => {
     iframe.onload = function() {
         try {
             const doc = iframe.contentDocument || iframe.contentWindow.document;
-            let playerElements = doc.querySelectorAll('.vinh-danh, table tr td, .player-name, li');
+            
+            // Danh sách các từ khóa nhận diện tên CLB hoặc từ rác cần loại bỏ
+            const ignoreKeywords = ['fc', 'united', 'city', 'club', 'clb', 'real', 'barcelona', 'bayern', 'psg', 'inter', 'milan', 'juventus', 'arsenal', 'chelsea', 'liverpool'];
+            
+            // Chỉ quét các thẻ thường chứa tên cầu thủ (bỏ qua các thẻ dễ dính tên CLB)
+            let playerElements = doc.querySelectorAll('.player-name, .vinh-danh span, td:nth-child(2), td:nth-child(3), li');
             let players = [];
 
             playerElements.forEach(el => {
                 const text = el.textContent.trim();
-                if (text && text.length > 2 && text.length < 35 && !players.includes(text)) {
+                const lowerText = text.toLowerCase();
+                
+                // Kiểm tra điều kiện lọc: độ dài hợp lý, không chứa từ khóa của CLB và chưa tồn tại trong mảng
+                const isClub = ignoreKeywords.some(keyword => lowerText.includes(keyword));
+                
+                if (text && text.length > 2 && text.length < 30 && !isClub && !players.includes(text)) {
                     players.push(text);
                 }
             });
 
+            // Nếu không quét đủ 11 cầu thủ hợp lệ, hệ thống sẽ tự động dùng danh sách chuẩn
             if (players.length < 11) {
                 players = [
-                    "GK: Courtois", "RB: Hakimi", "CB: Van Dijk", "CB: Ramos", "LB: Davies",
-                    "CM: De Bruyne", "CM: Rodri", "AM: Bellingham", "RW: Salah", "ST: Haaland", "LW: Vinicius Jr"
+                    "Courtois", "Hakimi", "Van Dijk", "Ramos", "Davies",
+                    "De Bruyne", "Rodri", "Bellingham", "Salah", "Haaland", "Vinicius Jr"
                 ];
             }
 
-            statusEl.textContent = 'Trạng thái: Đã lấy và hiển thị đội hình thành công!';
+            statusEl.textContent = 'Trạng thái: Đã lấy tên cầu thủ thành công!';
             renderPlayers(players);
 
         } catch (e) {
@@ -77,8 +88,8 @@ function renderPlayers(players) {
 function useDefaultPlayers(message) {
     statusEl.textContent = message;
     const defaultPlayers = [
-        "GK: Neuer", "RB: Cafu", "CB: Maldini", "CB: Cannavaro", "LB: Roberto Carlos", 
-        "CM: Xavi", "CM: Iniesta", "AM: Zidane", "RW: Messi", "ST: Ronaldo", "LW: Ronaldinho"
+        "Neuer", "Cafu", "Maldini", "Cannavaro", "Roberto Carlos", 
+        "Xavi", "Iniesta", "Zidane", "Messi", "Ronaldo", "Ronaldinho"
     ];
     renderPlayers(defaultPlayers);
 }
