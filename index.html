@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đội Hình Tiêu Biểu Mùa Giải (TOTS)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Đội Hình Tiêu Biểu Mùa Giải (TOTS)</h1>
+        <p>Hệ thống tự động tổng hợp từ bảng vinh danh giải đấu.</p>
+        
+        <!-- Nút lấy thông tin theo yêu cầu -->
+        <button class="btn-fetch" id="btnFetch">Lấy thông tin đội hình mạnh nhất mùa giải</button>
+        <div id="status">Trạng thái: Sẵn sàng lấy dữ liệu từ giải đấu.</div>
+        
+        <!-- Sân bóng hiển thị đội hình -->
+        <div class="pitch">
+            <div class="pitch-lines">
+                <div class="center-line"></div>
+                <div class="center-circle"></div>
+                <div class="penalty-box-top"></div>
+                <div class="penalty-box-bottom"></div>
+            </div>
+            <div id="playersContainer"></div>
+        </div>
+    </div>
+    <script src="script.js" defer></script>
+</body>
+</html>
