@@ -1,90 +1,84 @@
-document.getElementById('btnFetch').addEventListener('click', async () => {
-            const statusEl = document.getElementById('status');
-            const container = document.getElementById('playersContainer');
-            statusEl.textContent = 'Trạng thái: Đang kết nối và quét bảng vinh danh...';
-            container.innerHTML = '';
+const statusEl = document.getElementById('status');
+const container = document.getElementById('playersContainer');
 
-            try {
-                // Sử dụng CORS Proxy để đọc nội dung trang đích từ mọi nguồn
-                const targetUrl = 'https://nguyenn001.github.io/my-nguyennnnm0/';
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('Không thể tải dữ liệu từ trang đích.');
+// Chức năng nút Reset: Làm trắng toàn bộ sân và đặt lại trạng thái chờ
+document.getElementById('btnReset').addEventListener('click', () => {
+    container.innerHTML = '';
+    statusEl.textContent = 'Trạng thái: Đã làm trắng toàn bộ thông tin. Đang chờ lượt lấy dữ liệu tiếp theo...';
+});
 
-                const htmlText = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
+// Chức năng nút Lấy thông tin (Sử dụng iframe ẩn để né lỗi CORS)
+document.getElementById('btnFetch').addEventListener('click', () => {
+    statusEl.textContent = 'Trạng thái: Đang tải dữ liệu từ bảng vinh danh...';
+    container.innerHTML = '';
 
-                // Quét tìm tên cầu thủ từ các phần tử bảng vinh danh (có thể điều chỉnh CSS selector nếu cấu trúc thay đổi)
-                let playerElements = doc.querySelectorAll('.vinh-danh, table tr td, .player-name, li');
-                let players = [];
+    const targetUrl = 'https://nguyenn001.github.io/my-nguyennnnm0/';
+    let iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = targetUrl;
+    
+    iframe.onload = function() {
+        try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            let playerElements = doc.querySelectorAll('.vinh-danh, table tr td, .player-name, li');
+            let players = [];
 
-                playerElements.forEach(el => {
-                    const text = el.textContent.trim();
-                    // Lọc lấy các chuỗi có định dạng phù hợp tên cầu thủ
-                    if (text && text.length > 2 && text.length < 35 && !players.includes(text)) {
-                        players.push(text);
-                    }
-                });
-
-                // Dữ liệu dự phòng minh họa nếu trang đích chưa có dữ liệu hoặc cấu trúc khác
-                if (players.length < 11) {
-                    players = [
-                        "GK: Courtois", 
-                        "RB: Hakimi", "CB: Van Dijk", "CB: Ramos", "LB: Davies",
-                        "CM: De Bruyne", "CM: Rodri", "AM: Bellingham",
-                        "RW: Salah", "ST: Haaland", "LW: Vinicius Jr"
-                    ];
+            playerElements.forEach(el => {
+                const text = el.textContent.trim();
+                if (text && text.length > 2 && text.length < 35 && !players.includes(text)) {
+                    players.push(text);
                 }
+            });
 
-                statusEl.textContent = `Trạng thái: Đã tạo thành công đội hình mạnh nhất từ bảng vinh danh!`;
-
-                // Tọa độ sơ đồ chiến thuật 4-3-3 tiêu chuẩn trên sân bóng (% từ top và left)
-                const formation433 = [
-                    { top: '88%', left: '50%' }, // Thủ môn (GK)
-                    { top: '72%', left: '18%' }, // Hậu vệ trái (LB)
-                    { top: '75%', left: '38%' }, // Trung vệ (CB)
-                    { top: '75%', left: '62%' }, // Trung vệ (CB)
-                    { top: '72%', left: '82%' }, // Hậu vệ phải (RB)
-                    { top: '50%', left: '30%' }, // Tiền vệ (CM)
-                    { top: '45%', left: '50%' }, // Tiền vệ trung tâm (CDM/CM)
-                    { top: '50%', left: '70%' }, // Tiền vệ (CM)
-                    { top: '28%', left: '20%' }, // Tiền đạo trái (LW)
-                    { top: '22%', left: '50%' }, // Tiền đạo cắm (ST)
-                    { top: '28%', left: '80%' }  // Tiền đạo phải (RW)
+            if (players.length < 11) {
+                players = [
+                    "GK: Courtois", "RB: Hakimi", "CB: Van Dijk", "CB: Ramos", "LB: Davies",
+                    "CM: De Bruyne", "CM: Rodri", "AM: Bellingham", "RW: Salah", "ST: Haaland", "LW: Vinicius Jr"
                 ];
-
-                // Render cầu thủ lên sân
-                players.slice(0, 11).forEach((name, index) => {
-                    const pos = formation433[index] || { top: '50%', left: '50%' };
-                    const card = document.createElement('div');
-                    card.className = 'player-card';
-                    card.style.top = pos.top;
-                    card.style.left = pos.left;
-                    card.textContent = name;
-                    container.appendChild(card);
-                });
-
-            } catch (error) {
-                console.error(error);
-                statusEl.textContent = 'Trạng thái: Lỗi kết nối CORS hoặc trang web chưa sẵn sàng. Đang hiển thị đội hình mẫu.';
-                
-                // Hiển thị đội hình mẫu khi gặp lỗi mạng/CORS
-                const defaultPlayers = ["GK: Neuer", "RB: Cafu", "CB: Maldini", "CB: Cannavaro", "LB: Roberto Carlos", "CM: Xavi", "CM: Iniesta", "AM: Zidane", "RW: Messi", "ST: Ronaldo", "LW: Ronaldinho"];
-                const formation433 = [
-                    { top: '88%', left: '50%' }, { top: '72%', left: '18%' }, { top: '75%', left: '38%' }, { top: '75%', left: '62%' }, { top: '72%', left: '82%' },
-                    { top: '50%', left: '30%' }, { top: '45%', left: '50%' }, { top: '50%', left: '70%' },
-                    { top: '28%', left: '20%' }, { top: '22%', left: '50%' }, { top: '28%', left: '80%' }
-                ];
-                defaultPlayers.forEach((name, index) => {
-                    const pos = formation433[index];
-                    const card = document.createElement('div');
-                    card.className = 'player-card';
-                    card.style.top = pos.top;
-                    card.style.left = pos.left;
-                    card.textContent = name;
-                    container.appendChild(card);
-                });
             }
-        });
+
+            statusEl.textContent = 'Trạng thái: Đã lấy và hiển thị đội hình thành công!';
+            renderPlayers(players);
+
+        } catch (e) {
+            console.error(e);
+            useDefaultPlayers("Trạng thái: Không thể đọc trực tiếp do chính sách bảo mật trình duyệt. Đang hiển thị đội hình mẫu.");
+        }
+        document.body.removeChild(iframe);
+    };
+
+    iframe.onerror = function() {
+        useDefaultPlayers("Trạng thái: Lỗi kết nối trang web đích. Đang hiển thị đội hình mẫu.");
+        document.body.removeChild(iframe);
+    };
+
+    document.body.appendChild(iframe);
+});
+
+function renderPlayers(players) {
+    const formation433 = [
+        { top: '88%', left: '50%' }, { top: '72%', left: '18%' }, { top: '75%', left: '38%' }, 
+        { top: '75%', left: '62%' }, { top: '72%', left: '82%' }, { top: '50%', left: '30%' }, 
+        { top: '45%', left: '50%' }, { top: '50%', left: '70%' }, { top: '28%', left: '20%' }, 
+        { top: '22%', left: '50%' }, { top: '28%', left: '80%' }
+    ];
+
+    players.slice(0, 11).forEach((name, index) => {
+        const pos = formation433[index] || { top: '50%', left: '50%' };
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.style.top = pos.top;
+        card.style.left = pos.left;
+        card.textContent = name;
+        container.appendChild(card);
+    });
+}
+
+function useDefaultPlayers(message) {
+    statusEl.textContent = message;
+    const defaultPlayers = [
+        "GK: Neuer", "RB: Cafu", "CB: Maldini", "CB: Cannavaro", "LB: Roberto Carlos", 
+        "CM: Xavi", "CM: Iniesta", "AM: Zidane", "RW: Messi", "ST: Ronaldo", "LW: Ronaldinho"
+    ];
+    renderPlayers(defaultPlayers);
+}
